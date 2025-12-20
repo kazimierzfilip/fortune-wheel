@@ -177,7 +177,7 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
 
                     // Text Position (Midpoint radius + 0.6)
                     const midAngle = startAngle + angle / 2
-                    const textRadius = radius * 0.75
+                    const textRadius = radius * 0.55
                     const tx = center + textRadius * Math.cos(Math.PI * midAngle / 180)
                     const ty = center + textRadius * Math.sin(Math.PI * midAngle / 180)
 

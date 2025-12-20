@@ -41,7 +41,7 @@ function App() {
       </div>
 
       <div className="game-container">
-        <h1>Fortune Spin</h1>
+        <h1>Ho ho ho 2025</h1>
         <div className="wheel-wrapper">
           <div className="pointer-arrow">▼</div>
           <Wheel
