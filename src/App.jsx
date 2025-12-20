@@ -5,10 +5,23 @@ import './App.css'
 
 function App() {
   const [size, setSize] = useState(10)
+  const [unavailableSegments, setUnavailableSegments] = useState([])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const sizeParam = params.get('size')
+    const resetParam = params.get('reset')
+
+    if (resetParam === 'true') {
+      localStorage.removeItem('unavailableSegments')
+      setUnavailableSegments([])
+    } else {
+      const stored = localStorage.getItem('unavailableSegments')
+      if (stored) {
+        setUnavailableSegments(JSON.parse(stored))
+      }
+    }
+
     if (sizeParam) {
       const parsed = parseInt(sizeParam, 10)
       if (!isNaN(parsed) && parsed > 0) {
@@ -21,7 +34,7 @@ function App() {
     // Optional: play sound or dim lights
   }
 
-  const handleSpinEnd = () => {
+  const handleSpinEnd = (winnerIndex) => {
     // Trigger confetti
     confetti({
       particleCount: 150,
@@ -29,6 +42,13 @@ function App() {
       origin: { y: 0.6 },
       colors: ['#FFD700', '#FF6347', '#00BFFF', '#32CD32', '#FF69B4']
     })
+
+    // Mark segment as unavailable
+    if (winnerIndex !== null && winnerIndex !== undefined) {
+      const newUnavailable = [...unavailableSegments, winnerIndex]
+      setUnavailableSegments(newUnavailable)
+      localStorage.setItem('unavailableSegments', JSON.stringify(newUnavailable))
+    }
   }
 
   return (
@@ -46,6 +66,7 @@ function App() {
           <div className="pointer-arrow">▼</div>
           <Wheel
             segments={size}
+            unavailableSegments={unavailableSegments}
             onSpinStart={handleSpinStart}
             onSpinEnd={handleSpinEnd}
           />

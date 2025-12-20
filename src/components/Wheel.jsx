@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 
-export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
+export default function Wheel({ segments, unavailableSegments = [], onSpinStart, onSpinEnd }) {
     const canvasRef = useRef(null)
     const [rotation, setRotation] = useState(0)
     const [isSpinning, setIsSpinning] = useState(false)
@@ -19,7 +19,8 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
     // Generate segment colors
     const segmentData = Array.from({ length: segments }).map((_, i) => ({
         color: `hsl(${(i * 360) / segments}, 70%, 50%)`,
-        label: i + 1
+        label: i + 1,
+        unavailable: unavailableSegments.includes(i)
     }))
 
     useEffect(() => {
@@ -42,7 +43,24 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
                 if (Math.abs(state.velocity) < 0.1) {
                     state.velocity = 0
                     setIsSpinning(false)
-                    if (onSpinEnd) onSpinEnd()
+
+                    // Cleanup rotation to normalized range
+                    setRotation(prev => prev % 360)
+
+                    // We need to re-calculate winner here to be sure, or just rely on the effect
+                    // The effect below calculates winner when stops.
+                    // We pass the winner index to onSpinEnd
+
+                    // Wait a tick for the effect to calculate winner? 
+                    // Or calculating it here directly is safer to pass to callback.
+                    // Let's calculate it here.
+                    let currentRot = (rotation + state.velocity) % 360 // Use latest
+                    let angle = (270 - currentRot) % 360
+                    if (angle < 0) angle += 360
+                    const segmentAngle = 360 / segments
+                    const winningIndex = Math.floor(angle / segmentAngle)
+
+                    if (onSpinEnd) onSpinEnd(winningIndex)
                 }
             }
 
@@ -58,7 +76,7 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
         }
 
         return () => cancelAnimationFrame(animationFrameId)
-    }, [isSpinning, onSpinEnd])
+    }, [isSpinning, onSpinEnd, rotation, segments]) // rotation added dependency might cause re-renders of effect but animate loop handles it
 
     const handleTouchStart = (e) => {
         if (isSpinning && physics.current.velocity > 1) return // Already spinning fast
@@ -103,6 +121,116 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
             if (physics.current.velocity > maxVelocity) physics.current.velocity = maxVelocity
             if (physics.current.velocity < -maxVelocity) physics.current.velocity = -maxVelocity
 
+            // --- PREDICTION LOGIC ---
+            // Calculate where it would land naturally
+            // Total Delta Angle = v / (1 - friction) - v (geometric series sum of v*f^n)
+            // Actually sum is v + v*f + v*f^2 ... = v / (1 - f)
+            const friction = physics.current.friction
+            const predictedDelta = physics.current.velocity / (1 - friction)
+            const predictedFinalRotation = rotation + predictedDelta
+
+            // Normalize to find angle
+            let angle = (270 - predictedFinalRotation) % 360
+            while (angle < 0) angle += 360
+
+            const segmentAngle = 360 / segments
+            const winningIndex = Math.floor(angle / segmentAngle)
+
+            // Check if unavailable
+            if (unavailableSegments.includes(winningIndex)) {
+                // Find nearest available segment
+                // We prefer adding execution logic here to adjust velocity
+                let attempts = 0
+                let bestIndex = -1
+                let minDist = 1000
+
+                for (let i = 0; i < segments; i++) {
+                    if (!unavailableSegments.includes(i)) {
+                        // Calc distance from predicted winning angle to this segment's center
+                        // Segment center angle
+                        const centerAngle = (i * segmentAngle) + (segmentAngle / 2)
+
+                        // Distance in circle
+                        let dist = Math.abs(angle - centerAngle)
+                        if (dist > 180) dist = 360 - dist
+
+                        if (dist < minDist) {
+                            minDist = dist
+                            bestIndex = i
+                        }
+                    }
+                }
+
+                if (bestIndex !== -1) {
+                    // Calculate required delta to land on bestIndex center
+                    // We need (270 - (Rot + Delta)) % 360 = CenterAngle
+                    // 270 - Rot - Delta = CenterAngle + 360k
+                    // Delta = 270 - Rot - CenterAngle
+
+                    const targetCenterAngle = (bestIndex * segmentAngle) + (segmentAngle / 2)
+                    // We want to arrive roughly at this angle.
+                    // The current relation is angle = (270 - fw_rot) % 360
+                    // So fw_rot needs to be such that its maps to targetCenterAngle.
+                    // fw_rot = 270 - targetCenterAngle
+
+                    // We already have current rotation 'rotation'.
+                    // We need a total delta.
+                    // But we want to maintain direction of spin.
+                    // If velocity is positive (clockwise), we want positive delta.
+
+                    let targetFinalRot = 270 - targetCenterAngle
+
+                    // Create a large enough version of targetFinalRot that is close to predictedFinalRotation?
+                    // targetFinalRot += 360 * k.
+
+                    // predictedFinalRotation is, say, 5000 degrees.
+                    // We want nearest k such that targetFinalRot + k*360 is close to 5000?
+
+                    // But wait, we can just nudge the velocity a bit.
+                    // Or we can solve exactly.
+
+                    // Approximate way:
+                    // Calculate shift needed.
+                    // If current lands on Used, shift by +/- segmentAngle until Safe?
+                    // But that might look jerky if we change velocity too much.
+
+                    // Let's stick to solving for v.
+                    // predictedDelta = v / (1-f).
+                    // We want newDelta such that angle lands on targetCenterAngle.
+
+                    // Current predicted angle is 'angle'.
+                    // We want 'targetCenterAngle'.
+                    // Difference 'diff' = targetCenterAngle - angle.
+
+                    // Since angle = 270 - Rot, decreasing rotation increases angle.
+                    // So if we want angle to increase by diff, we need rotation to decrease by diff.
+                    // So Delta needs to decrease by diff.
+
+                    // wait, diff is in degrees [0-360].
+                    // Let's handle wrapping.
+
+                    let diff = targetCenterAngle - angle
+                    // Normalize diff to [-180, 180] for shortest path correction
+                    if (diff > 180) diff -= 360
+                    if (diff < -180) diff += 360
+
+                    // We need angle to change by 'diff'.
+                    // angle = 270 - (StartRot + Delta)
+                    // NewAngle = 270 - (StartRot + NewDelta)
+                    // NewAngle - Angle = -(NewDelta - Delta)
+                    // diff = -(NewDelta - Delta) = Delta - NewDelta
+                    // NewDelta = Delta - diff.
+
+                    const newDelta = predictedDelta - diff
+
+                    // NewVelocity = NewDelta * (1 - f)
+                    physics.current.velocity = newDelta * (1 - friction)
+
+                    // Sanity check: if velocity flipped direction, that's bad if user spun hard.
+                    // But since we likely only nudge by < 360, and total spin is usually > 1000, it should be fine.
+                }
+            }
+
             setIsSpinning(true)
             if (onSpinStart) onSpinStart()
         }
@@ -123,18 +251,10 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
         window.removeEventListener('mouseup', handleMouseUp)
     }
 
-    // Calculate winner when stopped
+    // Calculate winner when stopped logic moved to animate loop mostly,
+    // but the effect helps update the visual winner state for the boing effect
     useEffect(() => {
         if (!isSpinning && physics.current.velocity === 0 && rotation !== 0) {
-            // Pointer is at Top (270 degrees standard SVG 0 at 3 o'clock)
-            // Wheel is rotated by `rotation` degrees
-            // We need to find which segment is at 270 relative to the rotated coordinate system
-            // Segment Start in World Space = (StartAngle + Rotation) % 360
-            // We want StartAngle + Rotation <= 270 <= EndAngle + Rotation
-            // Easier: Transform Pointer to Wheel Space
-            // PointerWheelAngle = (270 - Rotation) % 360
-            // Normalize to [0, 360)
-
             let angle = (270 - rotation) % 360
             if (angle < 0) angle += 360
 
@@ -182,7 +302,6 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
                     const ty = center + textRadius * Math.sin(Math.PI * midAngle / 180)
 
                     // Dynamic transform for the winner
-                    // Since individual segments are in a group, we can scale from center
                     const isWinner = winner === i
 
                     return (
@@ -190,7 +309,8 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
                             transformOrigin: '50px 50px',
                             transform: isWinner ? 'scale(1.15)' : 'scale(1)',
                             transition: 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // BOING effect
-                            zIndex: isWinner ? 10 : 1 // SVG doesn't strictly support z-index this way but we rely on scale
+                            zIndex: isWinner ? 10 : 1,
+                            filter: seg.unavailable ? 'grayscale(100%) opacity(0.5)' : 'none'
                         }}>
                             <path
                                 d={d}
@@ -209,7 +329,8 @@ export default function Wheel({ segments, onSpinStart, onSpinEnd }) {
                                 style={{
                                     transformBox: 'fill-box',
                                     transformOrigin: 'center',
-                                    transform: `rotate(${midAngle + 90}deg)`, // Rotate text to face center or be readable
+                                    transform: `rotate(${midAngle + 90}deg)`,
+                                    textDecoration: seg.unavailable ? 'line-through' : 'none'
                                 }}
                             >
                                 {seg.label}
