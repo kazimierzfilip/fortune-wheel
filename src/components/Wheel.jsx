@@ -33,34 +33,67 @@ export default function Wheel({ segments, unavailableSegments = [], onSpinStart,
                 // Apply friction
                 state.velocity *= state.friction
 
-                // Apply rotation
-                setRotation(prev => {
-                    const next = prev + state.velocity
-                    return next % 360
-                }) // Keep it bounded just for sanity, though CSS rotate handles large numbers
+                // --- CRUISE CONTROL ---
+                // If velocity is low (about to stop), check if we are on a valid segment.
+                // If not, boost velocity slightly to cruise to the next one.
 
-                // Stop condition
-                if (Math.abs(state.velocity) < 0.1) {
-                    state.velocity = 0
-                    setIsSpinning(false)
+                const minCruiseVelocity = 0.5 // Speed to maintain if invalid
+                const stopThreshold = 0.1     // Speed below which we consider stopping
 
-                    // Cleanup rotation to normalized range
-                    setRotation(prev => prev % 360)
-
-                    // We need to re-calculate winner here to be sure, or just rely on the effect
-                    // The effect below calculates winner when stops.
-                    // We pass the winner index to onSpinEnd
-
-                    // Wait a tick for the effect to calculate winner? 
-                    // Or calculating it here directly is safer to pass to callback.
-                    // Let's calculate it here.
-                    let currentRot = (rotation + state.velocity) % 360 // Use latest
+                if (Math.abs(state.velocity) < minCruiseVelocity) {
+                    // Calculate current candidate winner
+                    let currentRot = (rotation + state.velocity) % 360
                     let angle = (270 - currentRot) % 360
                     if (angle < 0) angle += 360
                     const segmentAngle = 360 / segments
-                    const winningIndex = Math.floor(angle / segmentAngle)
+                    const candidateIndex = Math.floor(angle / segmentAngle)
 
-                    if (onSpinEnd) onSpinEnd(winningIndex)
+                    // If candidate is unavailable (and we are not stuck in a full-unavailable loop)
+                    if (unavailableSegments.includes(candidateIndex) && unavailableSegments.length < segments) {
+                        // Maintain minimum cruise velocity
+                        // Preserve direction
+                        const direction = state.velocity >= 0 ? 1 : -1
+                        state.velocity = minCruiseVelocity * direction
+                        // Reset friction for this tick so we don't slow down this frame? 
+                        // Or just override velocity after friction (which we did).
+                        // Note: normal friction will apply next frame, reducing it, 
+                        // but we will boost it back up here until we leave the bad segment.
+                    }
+                }
+
+                // Stop condition
+                if (Math.abs(state.velocity) < stopThreshold) {
+
+                    // Final check to ensure we didn't stop on bad segment 
+                    // (Should be covered by cruise control, but good for safety)
+                    let currentRot = (rotation + state.velocity) % 360
+                    let angle = (270 - currentRot) % 360
+                    if (angle < 0) angle += 360
+                    const segmentAngle = 360 / segments
+                    const winnerIndex = Math.floor(angle / segmentAngle)
+
+                    if (unavailableSegments.includes(winnerIndex) && unavailableSegments.length < segments) {
+                        // Should not happen with cruise control, but if it does, 
+                        // give a tiny nudge.
+                        const direction = state.velocity >= 0 ? 1 : -1
+                        state.velocity = minCruiseVelocity * direction
+                    } else {
+                        state.velocity = 0
+                        setIsSpinning(false)
+
+                        // Cleanup rotation to normalized range
+                        setRotation(prev => prev % 360)
+
+                        if (onSpinEnd) onSpinEnd(winnerIndex)
+                    }
+                }
+
+                // Apply rotation
+                if (state.velocity !== 0) {
+                    setRotation(prev => {
+                        const next = prev + state.velocity
+                        return next % 360
+                    })
                 }
             }
 
@@ -76,7 +109,7 @@ export default function Wheel({ segments, unavailableSegments = [], onSpinStart,
         }
 
         return () => cancelAnimationFrame(animationFrameId)
-    }, [isSpinning, onSpinEnd, rotation, segments]) // rotation added dependency might cause re-renders of effect but animate loop handles it
+    }, [isSpinning, onSpinEnd, rotation, segments, unavailableSegments]) // added unavailableSegments dep so effect updates when it changes
 
     const handleTouchStart = (e) => {
         if (isSpinning && physics.current.velocity > 1) return // Already spinning fast
