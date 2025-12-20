@@ -1,0 +1,221 @@
+.App {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.border-lights {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 4px solid #gold;
+  border-radius: 20px;
+  pointer-events: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-content: space-between;
+  padding: 10px;
+  z-index: 0;
+}
+
+/* We will simulate border lights with pseudo elements or children. 
+   Since we added children in App.jsx, let's style them.
+   Actually, the loop in App.jsx puts them in a flex container but we want them around the border.
+   Let's use absolute positioning relative to the container for a simpler "frame" effect 
+   or just a simple grid.
+   For simplicity given the structure, let's just make them float around or use a fixed border style
+   and use the children for something else like background particles.
+   
+   Wait, the plan said "Blinking lights border".
+   Orbiting lights might be complex to position dynamically.
+   Let's just position them absolutely based on index calc or just use a CSS border-image?
+   Actually, let's make the .light elements absolute distributed around.
+*/
+
+.border-lights {
+  display: block;
+  /* Override flex */
+}
+
+.light {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #fff, #ff0000);
+  border-radius: 50%;
+  box-shadow: 0 0 15px #ff0000;
+  animation: blink 1s infinite alternate;
+}
+
+/* Distribute lights roughly around the frame (simplified for arbitrary count) */
+.light:nth-child(1) {
+  top: 0;
+  left: 10%;
+}
+
+.light:nth-child(2) {
+  top: 0;
+  left: 30%;
+}
+
+.light:nth-child(3) {
+  top: 0;
+  left: 50%;
+}
+
+.light:nth-child(4) {
+  top: 0;
+  left: 70%;
+}
+
+.light:nth-child(5) {
+  top: 0;
+  left: 90%;
+}
+
+.light:nth-child(6) {
+  bottom: 0;
+  left: 10%;
+}
+
+.light:nth-child(7) {
+  bottom: 0;
+  left: 30%;
+}
+
+.light:nth-child(8) {
+  bottom: 0;
+  left: 50%;
+}
+
+.light:nth-child(9) {
+  bottom: 0;
+  left: 70%;
+}
+
+.light:nth-child(10) {
+  bottom: 0;
+  left: 90%;
+}
+
+.light:nth-child(11) {
+  left: 0;
+  top: 20%;
+}
+
+.light:nth-child(12) {
+  left: 0;
+  top: 50%;
+}
+
+.light:nth-child(13) {
+  left: 0;
+  top: 80%;
+}
+
+.light:nth-child(14) {
+  right: 0;
+  top: 20%;
+}
+
+.light:nth-child(15) {
+  right: 0;
+  top: 50%;
+}
+
+.light:nth-child(16) {
+  right: 0;
+  top: 80%;
+}
+
+/* Extra lights */
+.light:nth-child(17) {
+  top: 0;
+  left: 0;
+}
+
+.light:nth-child(18) {
+  top: 0;
+  right: 0;
+}
+
+.light:nth-child(19) {
+  bottom: 0;
+  left: 0;
+}
+
+.light:nth-child(20) {
+  bottom: 0;
+  right: 0;
+}
+
+
+@keyframes blink {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: hue-rotate(0deg);
+  }
+
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+    filter: hue-rotate(90deg);
+  }
+}
+
+.game-container {
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wheel-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+}
+
+@media (min-width: 600px) {
+  .wheel-wrapper {
+    width: 500px;
+    height: 500px;
+  }
+}
+
+.pointer-arrow {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3rem;
+  color: #fff;
+  z-index: 10;
+  text-shadow: 0 5px 5px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.wheel-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 10px solid #fff;
+  box-sizing: border-box;
+  background: #333;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
