@@ -3,14 +3,23 @@
 :root {
   --primary: #ffd700;
   --secondary: #ff4500;
-  --bg-gradient: linear-gradient(135deg, #2e003e 0%, #1a1a2e 100%);
+  /* Christmas Theme Background Variables */
+  --bg-gradient: radial-gradient(circle at center, #1a472a 0%, #0d2b1a 100%);
   --text-color: #ffffff;
 }
 
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
+
+  /* Apply Christmas Theme Globally */
   background: var(--bg-gradient);
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.15) 2px, transparent 2px),
+    radial-gradient(circle at center, #2e7d48 0%, #0f3d24 100%);
+  background-size: 50px 50px, 120px 120px, 100% 100%;
+
   color: var(--text-color);
   min-height: 100vh;
   display: flex;
