@@ -231,3 +231,238 @@ svg {
   height: 100%;
   display: block;
 }
+
+/* Mode Toggle Button */
+.mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  font-family: 'Mountains of Christmas', serif;
+  background: linear-gradient(135deg, #d4af37, #ffd700);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.mode-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+}
+
+.mode-toggle:active {
+  transform: translateY(0);
+}
+
+/* Edit Mode */
+.edit-mode {
+  max-width: 600px;
+  width: 90%;
+  padding: 30px;
+  background: rgba(15, 43, 29, 0.9);
+  border: 3px solid #d4af37;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.edit-mode h2 {
+  font-size: 2.5rem;
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px #000;
+}
+
+.edit-field {
+  margin-bottom: 25px;
+}
+
+.edit-field label {
+  display: block;
+  font-size: 1.3rem;
+  color: #ffd700;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.edit-field input,
+.edit-field textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  font-family: 'Arial', sans-serif;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  color: #fff;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.edit-field input:focus,
+.edit-field textarea:focus {
+  outline: none;
+  border-color: #ffd700;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.edit-field textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+
+.save-button {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.5rem;
+  font-family: 'Mountains of Christmas', serif;
+  background: linear-gradient(135deg, #ff3333, #ff6666);
+  color: #fff;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 51, 51, 0.4);
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 51, 51, 0.6);
+}
+
+.save-button:active {
+  transform: translateY(0);
+}
+
+/* Popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.popup-content {
+  background: linear-gradient(135deg, #0f2b1d, #1a4d2e);
+  padding: 40px 60px;
+  border-radius: 20px;
+  border: 4px solid #ffd700;
+  box-shadow: 0 10px 50px rgba(255, 215, 0, 0.5);
+  text-align: center;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.popup-content h2 {
+  font-size: 3rem;
+  color: #ffd700;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px #000;
+}
+
+.selected-value {
+  font-size: 2.5rem;
+  color: #fff;
+  margin: 20px 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px #000;
+  padding: 20px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 10px;
+  border: 2px solid #d4af37;
+}
+
+.popup-content button {
+  padding: 12px 40px;
+  font-size: 1.3rem;
+  font-family: 'Mountains of Christmas', serif;
+  background: linear-gradient(135deg, #d4af37, #ffd700);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.popup-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+}
+
+.popup-content button:active {
+  transform: translateY(0);
+}
+
+/* No Values State */
+.no-values {
+  text-align: center;
+  padding: 40px;
+}
+
+.no-values p {
+  font-size: 2rem;
+  color: #ffd700;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px #000;
+}
+
+.no-values button {
+  padding: 15px 40px;
+  font-size: 1.5rem;
+  font-family: 'Mountains of Christmas', serif;
+  background: linear-gradient(135deg, #33ff33, #66ff66);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(51, 255, 51, 0.4);
+  transition: all 0.3s ease;
+}
+
+.no-values button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(51, 255, 51, 0.6);
+}
+
+.no-values button:active {
+  transform: translateY(0);
+}
