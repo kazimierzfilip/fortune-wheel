@@ -163,7 +163,7 @@ export default function Wheel({ values, onSpinStart, onSpinEnd }) {
             onMouseDown={handleMouseDown}
             style={{ touchAction: 'none' }}
         >
-            <svg viewBox="0 0 100 100" style={{ transform: `rotate(${rotation}deg)` }}>
+            <svg viewBox="-3 -3 106 106" style={{ transform: `rotate(${rotation}deg)` }}>
                 {segmentData.map((seg, i) => {
                     const angle = 360 / segments
                     const startAngle = i * angle
@@ -189,9 +189,6 @@ export default function Wheel({ values, onSpinStart, onSpinEnd }) {
                     return (
                         <g key={i} style={{
                             transformOrigin: '50px 50px',
-                            transform: isWinner ? 'scale(1.15)' : 'scale(1)',
-                            transition: 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // BOING effect
-                            zIndex: isWinner ? 10 : 1
                         }}>
                             <path
                                 d={d}
@@ -218,6 +215,32 @@ export default function Wheel({ values, onSpinStart, onSpinEnd }) {
                         </g>
                     )
                 })}
+
+                {/* Decorative circles around the edge (Light bulbs) */}
+                {Array.from({ length: Math.max(segments * 6, 36) }).map((_, i) => {
+                    const count = Math.max(segments * 6, 36)
+                    const circleAngle = (i * 360) / count
+                    const edgeRadius = radius + 1.2
+                    const cx = center + edgeRadius * Math.cos(Math.PI * circleAngle / 180)
+                    const cy = center + edgeRadius * Math.sin(Math.PI * circleAngle / 180)
+
+                    // Cycle through gold, white, and red
+                    const colors = ['#1add00ff', '#c800cfff', '#ff3333', '#0066ffff', '#e8ff16ff']
+                    const circleColor = colors[i % 5]
+
+                    return (
+                        <circle
+                            key={`edge-${i}`}
+                            cx={cx}
+                            cy={cy}
+                            r="1.8"
+                            fill={circleColor}
+                            stroke="#333"
+                            strokeWidth="0.2"
+                        />
+                    )
+                })}
+
                 {/* Center cap - put at end to be on top */}
                 <circle cx="50" cy="50" r="5" fill="#333" stroke="#ffd700" strokeWidth="2" />
             </svg>
